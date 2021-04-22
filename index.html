@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="style.css">
+        <title>🐜 Ant colony optimization</title>
+    </head>
+
+    <body class="grid-container">
+        <header>
+            <h2>🐜 Ant colony optimization algorithm</h2>
+        </header>
+        <main>
+            <canvas height="750" width="750" style="border: black 1px solid;"></canvas>
+
+            <div id="settings">
+                <h3>Colony settings:</h3>
+                <div class="inputs">
+                    <label>Ants: <br><input id="ants" type="number" value="100" min="10" autocomplete="off"></label>
+                    <label>Nodes: <br><input id="nodes" type="number" value="50" min="10" autocomplete="off"></label>
+                    <label>Iterations: <br><input id="iterations" type="number" value="200" min="100"
+                        autocomplete="off"></label>
+                </div>
+                <h3>Control settings <a href="https://github.com/UltimateDoge5/ACO-TS/blob/master/README.md" title="More in readme">(?)</a></h3>
+                <div class="inputs">
+                    <label>Alpha: <br><input id="alpha" type="number" value="1" min="1" autocomplete="off"></label>
+                    <label>Beta: <br><input id="beta" type="number" value="2" min="2" autocomplete="off"></label>
+                    <label>Pher: <br><input id="pher" type="number" value="1" min="0.1" autocomplete="off"></label>
+                    <label>Pho: <br><input id="pho" type="number" value="0.1" step="0.1" autocomplete="off"> </label>
+                    <label>Q: <br><input id="Q" type="number" value="1" autocomplete="off"></label>
+                </div>
+
+                <div id="progress">
+                    <p id="iterationsText">0 / 200 iterations</p>
+                    <progress value="0"></progress>
+                </div>
+
+                <divs style="display: flex;justify-content: space-around;">
+                    <button id="run">Run</button>
+                    <button id="generate">Generate</button>
+            </div>
+
+            <div id="table">
+                <table>
+                    <tr>
+                        <th>Iteration</th>
+                        <th>Time</th>
+                        <th>Path cost</th>
+                    </tr>
+                </table>
+            </div>
+        </main>
+        <footer>
+            <a href="https://github.com/UltimateDoge5">Github</a>
+        </footer>
+    </body>
+    <script src="build/classes.js"></script>
+    <script src="build/index.js"></script>
+
+</html>

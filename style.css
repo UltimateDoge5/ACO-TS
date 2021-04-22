@@ -1,0 +1,134 @@
+* {
+    font-family: 'Roboto', sans-serif;
+}
+
+body {
+    background-color: #232323;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+}
+
+main {
+    display: flex;
+    justify-content: space-around;
+}
+
+#table {
+    overflow: auto;
+    min-height: auto;
+    max-height: 80vh;
+    min-width: 14%;
+    border: #323232 1px solid;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    overflow: auto;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+tr:first-child {
+    position: sticky;
+    top: 0;
+    background-color: #232323;
+}
+
+tr:nth-child(even) {
+    background-color: #323232;
+}
+
+header {
+    grid-row: 1;
+    grid-column: 3;
+    text-align: center;
+}
+
+header>h2 {
+    margin: 16px;
+}
+
+canvas {
+    grid-row: 1;
+    grid-column: 2;
+}
+
+#progress {
+    font-size: 20px;
+}
+
+button {
+    border: none;
+    color: inherit;
+    background-color: dodgerblue;
+    margin: 0;
+    margin-top: 16px;
+    padding: 8px 16px 8px 16px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: rgb(61, 158, 255);
+}
+
+button:disabled {
+    background-color: #1c7ad6;
+    cursor: default;
+    color: gray;
+}
+
+.inputs {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+}
+
+.inputs label {
+    margin-bottom: 10px;
+}
+
+input[type="number"] {
+    border: none;
+    width: 35%;
+    background-color: inherit;
+    color: inherit;
+    font-size: inherit;
+    border-bottom: dodgerblue 2px solid;
+    -moz-appearance: textfield;
+    transition: all 0.2s ease-in-out;
+    margin: 0;
+}
+
+input[type="number"]:focus {
+    width: 45%;
+    border-color: #3eff5e;
+    outline: none;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+label:hover>input[type="number"] {
+    border-color: #3eff5e;
+}
+
+footer {
+    margin-top: 16px;
+    text-align: center;
+}
+
+a {
+    color: dodgerblue;
+}
+
+a:visited {
+    color: dodgerblue;
+}
