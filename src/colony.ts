@@ -24,7 +24,6 @@ class Ant {
     }
 
     move = () => {
-        //this.path.push(this.initialNode)
         while (this.toVisit.length != 0) {
             const node = this.pickNode();
 
@@ -51,14 +50,14 @@ class Ant {
             probs.push(mul / sumDesirabilty);
         });
 
-        let rnd = Math.random();
-        let x = 0;
-        let tally = probs[x];
-        while (rnd > tally && x < probs.length - 1) {
-            tally += probs[++x];
+        const random = Math.random();
+        let nodeIndex = 0;
+        let tally = probs[nodeIndex];
+        while (random > tally && nodeIndex < probs.length - 1) {
+            tally += probs[++nodeIndex];
         }
 
-        return this.toVisit[x];
+        return this.toVisit[nodeIndex];
     }
 
     layPheromones = () => {
@@ -158,22 +157,19 @@ class GraphNode {
     }
 }
 
-class Colony{
-    [k: string]: any;
+class Colony {
     ants: Ant[] = []
     nodesAmount: number;
     graph: Graph;
     iterations = 200;
     iterationsDone = 0;
     totalIterations = 0;
-    ctx: CanvasRenderingContext2D;
     antsAmount: number;
     optimalPathCost: number | undefined;
     optimalPath: GraphNode[] = []
-    interval: number = 0;
     timeStart = 0;
-    timeStop = 0;
     didValsChange = false;
+    port: MessagePort;
     //Control values
     alpha = 1;
     beta = 2;
@@ -181,43 +177,22 @@ class Colony{
     pho = 0.1;
     Q = 1;
 
-    constructor(nodesAmnt: number, antsAmmount: number, ctx: CanvasRenderingContext2D) {
+    constructor(nodesAmnt: number, antsAmmount: number, workerPort: MessagePort) {
         this.nodesAmount = nodesAmnt;
         this.antsAmount = antsAmmount
-        this.ctx = ctx;
-        this.graph = new Graph(this.nodesAmount, this.pher, this.pho, canvas!.height, canvas!.width);
+        this.port = workerPort;
+
+        this.graph = new Graph(this.nodesAmount, this.pher, this.pho, 750, 750);
 
         for (let i = 0; i < this.antsAmount; i++) {
             const nodeIndex = Math.floor(Math.random() * (this.graph.nodes.length - 1 + 1)) + 0;
             this.ants.push(new Ant(this, this.graph.nodes, nodeIndex, this.alpha, this.beta, this.Q));
         }
-
-        this.ctx.fillStyle = "white"
-        this.ctx.fillRect(0, 0, canvas!.height, canvas!.width);
-
-        this.ctx.fillStyle = "black"
-        this.graph.nodes.forEach(node => {
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.stroke();
-        })
     }
 
     callIteration = () => {
         this.iterationsDone++;
-        //console.log(this.iterationsDone)
-        if (this.iterationsDone > this.iterations) {
-            clearInterval(this.interval);
-            this.timeStop = performance.now();
-            runButton.disabled = false;
-            generateButton.disabled = false;
-            this.totalIterations += this.iterationsDone - 1;
-            return true;
-        }
 
-        iterationsText.innerText = `${this.iterationsDone} / ${this.iterations} iterations`;
-        progressBar!.value = this.iterationsDone;
         this.ants.forEach(ant => {
             ant.reset()
             ant.move();
@@ -230,75 +205,42 @@ class Colony{
                 this.optimalPath = [];
                 this.optimalPath = ant.path;
                 this.optimalPathCost = ant.pathCost;
-                const row = table?.insertRow();
-                const iteration = row!.insertCell();
-                const time = row?.insertCell();
-                const cost = row?.insertCell();
-                iteration.innerText = this.iterationsDone + this.totalIterations + "";
-                time.innerText = `${(performance.now() - this.timeStart) / 1000}s`
-                cost.innerText = this.optimalPathCost + "";
-                this.drawPaths();
+
+                this.port.postMessage(JSON.stringify({
+                    event: "table", payload: {
+                        iterations: this.iterationsDone + this.totalIterations,
+                        timeStart: this.timeStart,
+                        optimalPathCost: this.optimalPathCost
+                    }
+                }));
+                this.port.postMessage(JSON.stringify({ event: "draw", payload: { graph: this.graph, optimalPath: this.optimalPath } }));
             }
             ant.layPheromones();
         })
-    }
-
-    drawPaths = () => {
-        this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = "black";
-        this.ctx.fillStyle = "white"
-        this.ctx.fillRect(0, 0, canvas!.height, canvas!.width);
-
-        this.ctx.fillStyle = "black"
-        this.graph.nodes.forEach(node => {
-            this.ctx.beginPath();
-            this.ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI);
-            this.ctx.fill()
-            this.ctx.stroke();
-        })
-
-        let nodeBuffer = this.optimalPath[0];
-
-        this.optimalPath.forEach(node => {
-            this.ctx.beginPath();
-            this.ctx.strokeStyle = "blue";
-            this.ctx.lineWidth = 2;
-            this.ctx.moveTo(nodeBuffer.x, nodeBuffer.y);
-            this.ctx.lineTo(node.x, node.y);
-            nodeBuffer = node;
-            this.ctx.stroke();
-        })
-
-        this.ctx.beginPath();
-        this.ctx.moveTo(nodeBuffer.x, nodeBuffer.y);
-        this.ctx.lineTo(this.optimalPath[0].x, this.optimalPath[0].y);
-        this.ctx.stroke();
+        this.port.postMessage(JSON.stringify({ event: "iteration", payload: { iterationsDone: this.iterationsDone, iterations: this.iterations } }));
     }
 
     iterateFull = () => {
         this.iterationsDone = 0;
-        progressBar!.value = 0;
-        progressBar!.max = this.iterations;
-        this.timeStart = performance.now()
-        this.interval = setInterval(this.callIteration, 1)
+        if (this.timeStart == 0) this.timeStart = performance.now();
+
+        for (let i = 0; i < this.iterations; i++) {
+            this.callIteration()
+        }
+
+        this.totalIterations += this.iterationsDone;
+        this.port.postMessage(JSON.stringify({ event: "done" }))
     }
 
     constructNewGraph = () => {
-        this.graph = new Graph(this.nodesAmount, this.pher, this.pho, canvas!.height, canvas!.width);
+        this.graph = new Graph(this.nodesAmount, this.pher, this.pho, 750, 750);
         this.optimalPath = [];
         this.optimalPathCost = undefined;
-        this.ctx.fillStyle = "white"
-        this.ctx.fillRect(0, 0, canvas!.height, canvas!.width);
-
-        this.ctx.fillStyle = "black"
-        this.graph.nodes.forEach(node => {
-            this.ctx.beginPath();
-            this.ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI);
-            this.ctx.fill()
-            this.ctx.stroke();
-        })
+        this.timeStart = 0;
 
         this.createNewAnts()
+        this.totalIterations = 0;
+        this.port.postMessage(JSON.stringify({ event: "draw", payload: { graph: this.graph, optimalPath: this.optimalPath } }));
     }
 
     createNewAnts = () => {

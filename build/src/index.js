@@ -1,6 +1,6 @@
 "use strict";
 const canvas = document.querySelector("canvas");
-const ctx = canvas?.getContext("2d");
+const ctx = canvas?.getContext("2d", { alpha: false });
 const worker = new SharedWorker("./build/worker.js");
 const progressBar = document.querySelector("progress");
 const iterationsText = document.querySelector("#iterationsText");
@@ -18,37 +18,27 @@ const Q = document.querySelector("#Q");
 runButton.addEventListener("click", function () {
     this.disabled = true;
     generateButton.disabled = true;
-    document.querySelectorAll("input").forEach((input) => {
-        input.disabled = true;
-    });
-    worker.port.postMessage({ event: "run" });
 });
 generateButton.addEventListener("click", function () {
     this.disabled = true;
     progressBar.value = 0;
-    worker.port.postMessage({ event: "graph" });
     table.children[0].innerHTML = '<tr><th>Iteration</th><th>Time</th><th>Path cost</th></tr>';
     this.disabled = false;
 });
-document.querySelectorAll("input").forEach((input) => {
+document.querySelectorAll("input[type='number']").forEach((input) => {
     input.addEventListener("change", function () {
         if (isNaN(parseFloat(this.value)) == false) {
-            if (this.id == "nodes")
-                table.children[0].innerHTML = '<tr><th>Iteration</th><th>Time</th><th>Path cost</th></tr>';
-            worker.port.postMessage({ event: "update", payload: { id: this.id, value: this.value } });
         }
     });
 });
 worker.port.onmessage = event => {
-    const data = JSON.parse(event.data);
+    const data = event.data;
     switch (data.event) {
         case "draw":
             drawPaths(data.payload.graph, data.payload.optimalPath);
             break;
         case "iteration":
-            progressBar.max = data.payload.iterations;
-            progressBar.value = data.payload.iterationsDone;
-            iterationsText.innerText = `${data.payload.iterationsDone} / ${data.payload.iterations} iterations`;
+            progressBar.value = data.payload.iterations;
             break;
         case "table":
             const row = table?.insertRow();
@@ -59,12 +49,8 @@ worker.port.onmessage = event => {
             time.innerText = `${((performance.now() - data.payload.timeStart) / 1000).toFixed(4)}s`;
             cost.innerText = data.payload.optimalPathCost + "";
             break;
-        case "done":
-            runButton.disabled = false;
-            generateButton.disabled = false;
-            document.querySelectorAll("input").forEach((input) => {
-                input.disabled = false;
-            });
+        default:
+            console.log(data);
             break;
     }
 };
@@ -98,4 +84,5 @@ const drawPaths = (graph, optimalPath) => {
     ctx.lineTo(optimalPath[0].x, optimalPath[0].y);
     ctx.stroke();
 };
+worker.port.postMessage({ event: "ping" });
 //# sourceMappingURL=index.js.map

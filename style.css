@@ -92,7 +92,7 @@ button:disabled {
     margin-bottom: 10px;
 }
 
-input[type="number"] {
+input {
     border: none;
     width: 35%;
     background-color: inherit;
@@ -104,8 +104,8 @@ input[type="number"] {
     margin: 0;
 }
 
-input[type="number"]:focus {
-    width: 45%;
+input:focus {
+    width: 50%;
     border-color: #3eff5e;
     outline: none;
 }
@@ -116,8 +116,13 @@ input::-webkit-inner-spin-button {
     margin: 0;
 }
 
-label:hover>input[type="number"] {
+label:hover>input {
     border-color: #3eff5e;
+}
+
+input:disabled {
+    border-color: dodgerblue !important;
+    cursor: not-allowed;
 }
 
 footer {

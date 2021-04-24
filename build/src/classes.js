@@ -128,7 +128,7 @@ class GraphNode {
     }
 }
 class Colony {
-    constructor(nodesAmnt, antsAmmount, ctx) {
+    constructor(nodesAmnt, antsAmmount) {
         this.ants = [];
         this.iterations = 200;
         this.iterationsDone = 0;
@@ -136,7 +136,6 @@ class Colony {
         this.optimalPath = [];
         this.interval = 0;
         this.timeStart = 0;
-        this.timeStop = 0;
         this.didValsChange = false;
         this.alpha = 1;
         this.beta = 2;
@@ -145,14 +144,6 @@ class Colony {
         this.Q = 1;
         this.callIteration = () => {
             this.iterationsDone++;
-            if (this.iterationsDone > this.iterations) {
-                clearInterval(this.interval);
-                this.timeStop = performance.now();
-                runButton.disabled = false;
-                generateButton.disabled = false;
-                this.totalIterations += this.iterationsDone - 1;
-                return true;
-            }
             iterationsText.innerText = `${this.iterationsDone} / ${this.iterations} iterations`;
             progressBar.value = this.iterationsDone;
             this.ants.forEach(ant => {
@@ -165,64 +156,33 @@ class Colony {
                     this.optimalPath = [];
                     this.optimalPath = ant.path;
                     this.optimalPathCost = ant.pathCost;
-                    const row = table?.insertRow();
-                    const iteration = row.insertCell();
-                    const time = row?.insertCell();
-                    const cost = row?.insertCell();
-                    iteration.innerText = this.iterationsDone + this.totalIterations + "";
-                    time.innerText = `${(performance.now() - this.timeStart) / 1000}s`;
-                    cost.innerText = this.optimalPathCost + "";
-                    this.drawPaths();
+                    postMessage({ event: "table", payload: {} }, "*");
+                    postMessage({ event: "draw", payload: { graph: this.graph, optimalPath: this.optimalPath } }, "*");
                 }
                 ant.layPheromones();
             });
-        };
-        this.drawPaths = () => {
-            this.ctx.lineWidth = 1;
-            this.ctx.strokeStyle = "black";
-            this.ctx.fillStyle = "white";
-            this.ctx.fillRect(0, 0, canvas.height, canvas.width);
-            this.ctx.fillStyle = "black";
-            this.graph.nodes.forEach(node => {
-                this.ctx.beginPath();
-                this.ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI);
-                this.ctx.fill();
-                this.ctx.stroke();
-            });
-            let nodeBuffer = this.optimalPath[0];
-            this.optimalPath.forEach(node => {
-                this.ctx.beginPath();
-                this.ctx.strokeStyle = "blue";
-                this.ctx.lineWidth = 2;
-                this.ctx.moveTo(nodeBuffer.x, nodeBuffer.y);
-                this.ctx.lineTo(node.x, node.y);
-                nodeBuffer = node;
-                this.ctx.stroke();
-            });
-            this.ctx.beginPath();
-            this.ctx.moveTo(nodeBuffer.x, nodeBuffer.y);
-            this.ctx.lineTo(this.optimalPath[0].x, this.optimalPath[0].y);
-            this.ctx.stroke();
+            postMessage({ event: "iteration", payload: { iterations: this.iterations } }, "*");
         };
         this.iterateFull = () => {
             this.iterationsDone = 0;
-            progressBar.value = 0;
-            progressBar.max = this.iterations;
             this.timeStart = performance.now();
-            this.interval = setInterval(this.callIteration, 1);
+            for (let i = 0; i < this.iterations; i++) {
+                this.callIteration();
+            }
+            return true;
         };
         this.constructNewGraph = () => {
-            this.graph = new Graph(this.nodesAmount, this.pher, this.pho, canvas.height, canvas.width);
+            this.graph = new Graph(this.nodesAmount, this.pher, this.pho, 750, 750);
             this.optimalPath = [];
             this.optimalPathCost = undefined;
-            this.ctx.fillStyle = "white";
-            this.ctx.fillRect(0, 0, canvas.height, canvas.width);
-            this.ctx.fillStyle = "black";
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, 750, 750);
+            ctx.fillStyle = "black";
             this.graph.nodes.forEach(node => {
-                this.ctx.beginPath();
-                this.ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI);
-                this.ctx.fill();
-                this.ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
             });
             this.createNewAnts();
         };
@@ -235,21 +195,11 @@ class Colony {
         };
         this.nodesAmount = nodesAmnt;
         this.antsAmount = antsAmmount;
-        this.ctx = ctx;
-        this.graph = new Graph(this.nodesAmount, this.pher, this.pho, canvas.height, canvas.width);
+        this.graph = new Graph(this.nodesAmount, this.pher, this.pho, 750, 750);
         for (let i = 0; i < this.antsAmount; i++) {
             const nodeIndex = Math.floor(Math.random() * (this.graph.nodes.length - 1 + 1)) + 0;
             this.ants.push(new Ant(this, this.graph.nodes, nodeIndex, this.alpha, this.beta, this.Q));
         }
-        this.ctx.fillStyle = "white";
-        this.ctx.fillRect(0, 0, canvas.height, canvas.width);
-        this.ctx.fillStyle = "black";
-        this.graph.nodes.forEach(node => {
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI);
-            ctx.fill();
-            ctx.stroke();
-        });
     }
 }
 //# sourceMappingURL=classes.js.map
